@@ -224,13 +224,13 @@ int main(int argc, char* argv[]) {
       "tensorflow_inception_graph.pb";
   string labels =
       "tensorflow/examples/label_image/data/"
-      "imagenet_comp_graph_label_strings.txt";
+      "imagenet_slim_labels.txt";
   int32 input_width = 299;
   int32 input_height = 299;
   int32 input_mean = 128;
   int32 input_std = 128;
-  string input_layer = "Mul";
-  string output_layer = "softmax";
+  string input_layer = "input";
+  string output_layer = "InceptionV3/Predictions/Reshape_1";
   bool self_test = false;
   string root_dir = "";
   std::vector<Flag> flag_list = {
@@ -285,10 +285,10 @@ int main(int argc, char* argv[]) {
   pInferenceEngine->init(graph_path);
 
   tensor_exchange_t exInput[1];
-  pInferenceEngine->addInput("Mul", {1, 299, 299, 3}, tf_interface_lib::eExchangeDataType::DT_FLOAT, exInput[0]);
+  pInferenceEngine->addInput("input", {1, 299, 299, 3}, tf_interface_lib::eExchangeDataType::DT_FLOAT, exInput[0]);
 
   tensor_exchange_t exOutput[1];
-  pInferenceEngine->addOutput("softmax", {1, 1008}, tf_interface_lib::eExchangeDataType::DT_FLOAT, exOutput[0]);
+  pInferenceEngine->addOutput("InceptionV3/Predictions/Reshape_1", {1, 1008}, tf_interface_lib::eExchangeDataType::DT_FLOAT, exOutput[0]);
 
   LOG(INFO) << "Init done";
 
