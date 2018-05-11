@@ -42,8 +42,7 @@ public:
 
 	int8_t init(std::string pathToModel);
 
-	int8_t infer(tensor_exchange_t inputs[], uint8_t num_inputs,
-			tensor_exchange_t outputs[], uint8_t num_outputs);
+	int8_t infer();
 
 	void shutdown(){};
 

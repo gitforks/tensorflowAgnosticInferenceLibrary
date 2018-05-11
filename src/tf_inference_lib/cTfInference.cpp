@@ -64,12 +64,14 @@ void cTfInference::addInput(const std::string blobName,
 	LOG(INFO) << "Adding input \"" << blobName << "\"with properties " << inp.DebugString();
 
 	o_exchangeStruct.data_type = dtype;
+	o_exchangeStruct.data_len = 1;
 	for (unsigned int i=0; i<TF_INFERENCE_LIB_MAX_DIMS && i<dims.size(); i++)
 	{
 		o_exchangeStruct.dims[i] = dims.at(i);
+		o_exchangeStruct.data_len *= dims.at(i);
 	}
-	o_exchangeStruct.data_len = 0;
-	o_exchangeStruct.mem = nullptr;
+	
+	o_exchangeStruct.mem = inp.flat<convertDataType(dtype)>().data();
 
 
 }
@@ -88,16 +90,16 @@ void cTfInference::addOutput(const std::string blobName,
 	LOG(INFO) << "Adding output \"" << blobName << "\" with properties " << outp.DebugString();
 
 	o_exchangeStruct.data_type = dtype;
+	o_exchangeStruct.data_len = 1;
 	for (unsigned int i=0; i<TF_INFERENCE_LIB_MAX_DIMS && i<dims.size(); i++)
 	{
 		o_exchangeStruct.dims[i] = dims.at(i);
+		o_exchangeStruct.data_len *= dims.at(i);
 	}
-	o_exchangeStruct.data_len = 0;
-	o_exchangeStruct.mem = nullptr;
+	o_exchangeStruct.mem = outp.flat<convertDataType(dtype)>().data();
 }
 
-tensorflow::int8 cTfInference::infer(tensor_exchange_t inputs[], tensorflow::uint8 num_inputs,
-		tensor_exchange_t outputs[], tensorflow::uint8 num_outputs)
+tensorflow::int8 cTfInference::infer()
 {
 
 	// Check if inference engine is initialized
@@ -107,29 +109,9 @@ tensorflow::int8 cTfInference::infer(tensor_exchange_t inputs[], tensorflow::uin
 		return -1;
 	}
 
-	// Copy all inputs into a local tensor <tensorflow agnostic interface>
-	for (int i= 0; i<num_inputs; i++)
-	{
-		copyDataIntoTensor(std::get<1>(m_vInputs.at(i)), inputs[i]);
-
-	}
-
 	// infer through the graph
 	Status run_status = m_pSession->Run(m_vInputs,
 			m_vOutputNames, {}, &m_vOutputTensors);
-
-	// Provide the results in the tensorflow agnostic interface
-	for (int i=0; i<num_outputs; i++)
-	{
-		if(!m_vOutputTensors[i].IsAligned()) // todo: how to enforce alignment?
-		  {
-			  LOG(ERROR) << "Output-Tensor is not aligned \n";
-			  return -1;
-		  }
-		outputs[i].mem = (void*) m_vOutputTensors[i].tensor_data().data();
-		outputs[i].data_len = m_vOutputTensors[i].tensor_data().size();
-		// todo: update data type, too?
-	}
 
 
 	if (!run_status.ok()) {

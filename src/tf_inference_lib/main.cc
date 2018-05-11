@@ -297,8 +297,11 @@ int main(int argc, char* argv[]) {
 	  LOG(ERROR) << "Tensor is not aligned \n";
 	  return -1;
   }
-  exInput[0].mem = (void*) resized_tensor.tensor_data().data();
-  exInput[0].data_len = resized_tensor.tensor_data().size();
+
+  // copy data into input:
+  memcpy(resized_tensor.flat<DT_FLOAT>().data(), exInput[0].mem, exInput[0].data_len);
+  //exInput[0].mem = (void*) resized_tensor.tensor_data().data();
+  //exInput[0].data_len = resized_tensor.tensor_data().size();
 
   float* inpIt = (float*)exInput[0].mem;
   for(int i=0; i<299*299*3; i++)
@@ -333,7 +336,7 @@ int main(int argc, char* argv[]) {
   // providing storage for the result
 
   // doing inference
-  tensorflow::uint8 status_inference = pInferenceEngine->infer(exInput, 1, exOutput, 1);
+  tensorflow::uint8 status_inference = pInferenceEngine->infer();
   if(status_inference != 0)
   {
 	  LOG(ERROR) << "Inference failed!";
@@ -341,8 +344,10 @@ int main(int argc, char* argv[]) {
   }
 
   // putting the results into the application specific format (in this case: again a tensor)
-  tf_interface_lib::cTfInference::copyDataIntoTensor(outputs[0], exOutput[0]);
+  //tf_interface_lib::cTfInference::copyDataIntoTensor(outputs[0], exOutput[0]);
 
+  memcpy(exOutput[0].mem, outputs[0].flat<DT_FLOAT>().data(), exOutput[0].len_data);
+  
   // alternative solution:
   float* it = (float*) exOutput[0].mem;
       float max_val = 0.0;

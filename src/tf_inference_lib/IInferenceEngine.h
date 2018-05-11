@@ -36,8 +36,7 @@ public:
 
 	virtual int8_t init(std::string pathToModel) = 0;
 
-	virtual int8_t infer(tensor_exchange_t inputs[], uint8_t num_inputs,
-			tensor_exchange_t outputs[], uint8_t num_outputs) = 0;
+	virtual int8_t infer() = 0;
 
 	virtual void shutdown() = 0;
 
