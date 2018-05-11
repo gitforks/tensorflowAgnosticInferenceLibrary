@@ -71,7 +71,7 @@ void cTfInference::addInput(const std::string blobName,
 		o_exchangeStruct.data_len *= dims.at(i);
 	}
 	
-	o_exchangeStruct.mem = inp.flat<convertDataType(dtype)>().data();
+	o_exchangeStruct.mem = inp.flat<float>().data();
 
 
 }
@@ -96,7 +96,7 @@ void cTfInference::addOutput(const std::string blobName,
 		o_exchangeStruct.dims[i] = dims.at(i);
 		o_exchangeStruct.data_len *= dims.at(i);
 	}
-	o_exchangeStruct.mem = outp.flat<convertDataType(dtype)>().data();
+	o_exchangeStruct.mem = outp.flat<float>().data();
 }
 
 tensorflow::int8 cTfInference::infer()
