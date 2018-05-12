@@ -61,7 +61,8 @@ protected: /* helper functions */
 	tensorflow::Status LoadGraph(std::string graph_file_name,
 	                 std::unique_ptr<tensorflow::Session>* session);
 
-    tensorflow::DataType convertDataType(eExchangeDataType exchangeType);
+  	tensorflow::DataType convertDataType(eExchangeDataType exchangeType);
+	void*  getDataPointer(tensorflow::Tensor& tensor);
 
 
 

@@ -57,7 +57,7 @@ void* cTfInference::addInput(const std::string blobName,
 
 	LOG(INFO) << "Adding input \"" << blobName << "\"with properties " << inp.DebugString();
 
-	return inp.flat<float>().data();
+	return getDataPointer(inp);
 
 
 }
@@ -79,7 +79,8 @@ void* cTfInference::getInputData(unsigned int index)
 {
 	if (index < m_vInputs.size())
 	{
-		return m_vInputs.at(index).second.flat<float>().data();
+		//return m_vInputs.at(index).second.flat<float>().data();
+		return getDataPointer(m_vInputs.at(index).second);
 	}
 	else
 	{
@@ -91,7 +92,7 @@ void* cTfInference::getOutputData(unsigned int index)
 {
 	if (index < m_vOutputTensors.size())
 	{
-		return m_vOutputTensors.at(index).flat<float>().data();
+		return getDataPointer(m_vOutputTensors.at(index));
 	}
 	else
 	{
@@ -170,5 +171,35 @@ tensorflow::DataType cTfInference::convertDataType(eExchangeDataType exchangeTyp
 	}
 
 	return tensorflow::DT_FLOAT;
+}
+
+void*  cTfInference::getDataPointer(tensorflow::Tensor& tensor)
+{
+	switch(tensor.dtype())
+	{
+	case tensorflow::DT_FLOAT: return tensor.flat<float>().data(); break;
+	case tensorflow::DT_DOUBLE: return tensor.flat<double>().data(); break;
+	case tensorflow::DT_INT32: return tensor.flat<int32_t>().data(); break;
+	case tensorflow::DT_UINT16: return tensor.flat<uint16_t>().data(); break;
+	case tensorflow::DT_UINT8: return tensor.flat<uint8_t>().data(); break;
+	case tensorflow::DT_INT16: return tensor.flat<int16_t>().data(); break;
+	case tensorflow::DT_INT8: return tensor.flat<int8_t>().data(); break;
+	/*case tensorflow::DT_STRING: return tensorflow::DT_STRING; break;
+	case tensorflow::DT_COMPLEX64: return tensorflow::DT_COMPLEX64; break;
+	case tensorflow::DT_COMPLEX128: return tensorflow::DT_COMPLEX128; break;
+	case tensorflow::DT_INT64: return tensorflow::DT_INT64; break;
+	case tensorflow::DT_BOOL: return tensorflow::DT_BOOL; break;
+	case tensorflow::DT_QINT8: return tensorflow::DT_QINT8; break;
+	case tensorflow::DT_QUINT8: return tensorflow::DT_QUINT8; break;
+	case tensorflow::DT_QINT16: return tensorflow::DT_QINT16; break;
+	case tensorflow::DT_QUINT16: return tensorflow::DT_QUINT16; break;
+	case tensorflow::DT_QINT32: return tensorflow::DT_QINT32; break;
+	case tensorflow::DT_BFLOAT16: return tensorflow::DT_BFLOAT16; break;*/
+	default:
+		LOG(ERROR) << "Unsupported data type yet in tf_inference_lib";
+		return nullptr;
+	}
+
+	return nullptr;
 }
 
