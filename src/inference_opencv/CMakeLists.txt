@@ -2,11 +2,17 @@ cmake_minimum_required(VERSION 2.8)
 project( DisplayImage )
 find_package( OpenCV REQUIRED )
 
-set (CMAKE_CXX_FLAGS "--std=c++11 ${CMAKE_CXX_FLAGS}")
-include_directories("/home/jan/tensorflow_cpp/cpu_only/tensorflow/tensorflow/examples/tf_inference_lib")
-link_directories("/home/jan/tensorflow_cpp/deliverables/tensorflow1_0/gpu/bazel")
-#link_directories("/home/jan/tensorflow_cpp/cpu_only/tensorflow/tensorflow/contrib/cmake/build")
-add_executable( testOpenCV_tensorflow testOpenCV_tensorflow.cpp)
+set(CMAKE_CXX_STANDARD 11)
 
-MESSAGE(STATUS "${OpenCV_LIBS}")
-target_link_libraries( testOpenCV_tensorflow ${OpenCV_LIBS} libTfInferenceCPU.so  )
+include_directories( 
+	${OpenCV_INCLUDE_DIRS}, 
+	"/home/jan/projects/tensorflowAgnosticInferenceLibrary/src/tf_inference_lib"
+       	)
+
+link_directories(
+	"/home/jan/projects/tensorflowAgnosticInferenceLibrary/build_env/bin_cpu"
+	)
+
+add_executable( ObjectDetection ObjectDetection.cpp )
+
+target_link_libraries( ObjectDetection ${OpenCV_LIBS} tf_inference_lib) # tensorflow_cc)
