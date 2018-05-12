@@ -23,6 +23,24 @@ cc_library(
 )
 
 cc_binary(
+	name = "libtf_inference_lib.so",
+	srcs = [
+		"cTfInference.cpp",
+        "cTfInference.hpp",
+        "cInferenceEngineFactory.cpp",
+        "IInferenceEngine.h",
+	],
+	deps = [
+        "//tensorflow/cc:cc_ops",
+        "//tensorflow/core:framework_internal",
+        "//tensorflow/core:tensorflow",
+        ],
+	linkopts=["-shared"],
+	linkshared=1,
+	visibility=["//visibility:public"]
+)
+
+cc_binary(
     name = "test_lib",
     srcs = [
         "main.cc",
