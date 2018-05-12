@@ -46,19 +46,16 @@ public:
 
 	void shutdown(){};
 
-	void addInput(const std::string blobName,
+	void* addInput(const std::string blobName,
 			const std::vector<int64_t>& dims,
-			const eExchangeDataType dtype,
-			tensor_exchange_t& o_exchangeStruct);
+			const eExchangeDataType dtype);
 
 	void addOutput(const std::string blobName,
 				const std::vector<int64_t>& dims,
-				const eExchangeDataType dtype,
-				tensor_exchange_t& o_exchangeStruct);
+				const eExchangeDataType dtype);
 
-
-	static tensorflow::Status copyDataIntoTensor(tensorflow::Tensor& dst, const tensor_exchange_t& src);
-
+	void* getOutputData(unsigned int index);
+	void* getInputData(unsigned int index);
 
 protected: /* helper functions */
 	tensorflow::Status LoadGraph(std::string graph_file_name,
@@ -67,8 +64,6 @@ protected: /* helper functions */
     tensorflow::DataType convertDataType(eExchangeDataType exchangeType);
 
 
-
-    template <typename T> static tensorflow::Status copyDataIntoTensorInternal(tensorflow::Tensor& dst, const tensor_exchange_t& src);
 
 private: /* private members */
 	bool m_bInitialized;

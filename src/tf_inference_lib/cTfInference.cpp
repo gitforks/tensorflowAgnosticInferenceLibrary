@@ -16,14 +16,11 @@ using tensorflow::int32;
 
 cTfInference::cTfInference()
 {
-	// TODO Auto-generated constructor stub
 	m_bInitialized = false;
-
 }
 
 cTfInference::~cTfInference()
 {
-	// TODO Auto-generated destructor stub
 }
 
 
@@ -46,13 +43,10 @@ tensorflow::int8 cTfInference::init(std::string pathToModel)
 	return 0;
 }
 
-void cTfInference::addInput(const std::string blobName,
+void* cTfInference::addInput(const std::string blobName,
 		const std::vector<int64_t>& dims,
-		const eExchangeDataType dtype,
-		tensor_exchange_t& o_exchangeStruct)
+		const eExchangeDataType dtype)
 {
-
-	memset(&o_exchangeStruct, 0, sizeof(o_exchangeStruct));
 	std::vector<tensorflow::int64> tf_dims(dims.begin(), dims.end());
 
 	Tensor inp(convertDataType(dtype), tensorflow::TensorShape(tf_dims));
@@ -63,24 +57,14 @@ void cTfInference::addInput(const std::string blobName,
 
 	LOG(INFO) << "Adding input \"" << blobName << "\"with properties " << inp.DebugString();
 
-	o_exchangeStruct.data_type = dtype;
-	o_exchangeStruct.data_len = 1;
-	for (unsigned int i=0; i<TF_INFERENCE_LIB_MAX_DIMS && i<dims.size(); i++)
-	{
-		o_exchangeStruct.dims[i] = dims.at(i);
-		o_exchangeStruct.data_len *= dims.at(i);
-	}
-	
-	o_exchangeStruct.mem = inp.flat<float>().data();
+	return inp.flat<float>().data();
 
 
 }
 void cTfInference::addOutput(const std::string blobName,
 		const std::vector<int64_t>& dims,
-		const eExchangeDataType dtype,
-		tensor_exchange_t& o_exchangeStruct)
+		const eExchangeDataType dtype)
 {
-	memset(&o_exchangeStruct, 0, sizeof(o_exchangeStruct));
 	std::vector<tensorflow::int64> tf_dims(dims.begin(), dims.end());
 
 	Tensor outp(convertDataType(dtype), tensorflow::TensorShape(tf_dims));
@@ -89,15 +73,32 @@ void cTfInference::addOutput(const std::string blobName,
 
 	LOG(INFO) << "Adding output \"" << blobName << "\" with properties " << outp.DebugString();
 
-	o_exchangeStruct.data_type = dtype;
-	o_exchangeStruct.data_len = 1;
-	for (unsigned int i=0; i<TF_INFERENCE_LIB_MAX_DIMS && i<dims.size(); i++)
-	{
-		o_exchangeStruct.dims[i] = dims.at(i);
-		o_exchangeStruct.data_len *= dims.at(i);
-	}
-	o_exchangeStruct.mem = outp.flat<float>().data();
 }
+
+void* cTfInference::getInputData(unsigned int index)
+{
+	if (index < m_vInputs.size())
+	{
+		return m_vInputs.at(index).second.flat<float>().data();
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+void* cTfInference::getOutputData(unsigned int index)
+{
+	if (index < m_vOutputTensors.size())
+	{
+		return m_vOutputTensors.at(index).flat<float>().data();
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
 
 tensorflow::int8 cTfInference::infer()
 {
@@ -122,53 +123,6 @@ tensorflow::int8 cTfInference::infer()
 	return 0;
 
 
-}
-
-Status cTfInference::copyDataIntoTensor(tensorflow::Tensor& dst, const tensor_exchange_t& src)
-{
-	switch(src.data_type)
-		{
-		case eExchangeDataType::DT_FLOAT: return copyDataIntoTensorInternal<float>(dst, src); break;
-		case eExchangeDataType::DT_DOUBLE: return copyDataIntoTensorInternal<double>(dst, src); break;
-		case eExchangeDataType::DT_INT32: return copyDataIntoTensorInternal<tensorflow::int32>(dst, src); break;
-		case eExchangeDataType::DT_UINT16: return copyDataIntoTensorInternal<tensorflow::uint16>(dst, src); break;
-		case eExchangeDataType::DT_UINT8: return copyDataIntoTensorInternal<tensorflow::uint8>(dst, src); break;
-		case eExchangeDataType::DT_INT16: return copyDataIntoTensorInternal<tensorflow::int16>(dst, src); break;
-		case eExchangeDataType::DT_INT8: return copyDataIntoTensorInternal<tensorflow::int8>(dst, src); break;
-		case eExchangeDataType::DT_STRING: return tensorflow::errors::Unimplemented("String Tensors are not implemented"); break;
-		case eExchangeDataType::DT_COMPLEX64: return copyDataIntoTensorInternal<tensorflow::complex64>(dst, src); break;
-		case eExchangeDataType::DT_COMPLEX128: return copyDataIntoTensorInternal<tensorflow::complex128>(dst, src); break;
-		case eExchangeDataType::DT_INT64: return copyDataIntoTensorInternal<tensorflow::int64>(dst, src); break;
-		case eExchangeDataType::DT_BOOL: return copyDataIntoTensorInternal<tensorflow::uint8>(dst, src); break;
-		case eExchangeDataType::DT_QINT8: return copyDataIntoTensorInternal<tensorflow::qint8>(dst, src); break;
-		case eExchangeDataType::DT_QUINT8: return copyDataIntoTensorInternal<tensorflow::quint8>(dst, src); break;
-		case eExchangeDataType::DT_QINT16: return copyDataIntoTensorInternal<tensorflow::qint16>(dst, src); break;
-		case eExchangeDataType::DT_QUINT16: return copyDataIntoTensorInternal<tensorflow::quint16>(dst, src); break;
-		case eExchangeDataType::DT_QINT32: return copyDataIntoTensorInternal<tensorflow::qint32>(dst, src); break;
-		case eExchangeDataType::DT_BFLOAT16: return copyDataIntoTensorInternal<tensorflow::bfloat16>(dst, src); break;
-		}
-
-	return tensorflow::Status::OK();
-}
-
-template <typename T>
-tensorflow::Status cTfInference::copyDataIntoTensorInternal(tensorflow::Tensor& dst, const tensor_exchange_t& src)
-{
-	if(src.mem != nullptr)
-	{
-		auto mappedTensor = dst.flat<T>(); // a flat array (Eigen)
-		T* mappedMemory = (T*) (src.mem);
-		void* memoryLimit = (char*) src.mem + src.data_len - sizeof(T);
-		for (tensorflow::int64 j = 0;
-				j<dst.NumElements() && (void*) mappedMemory <= memoryLimit;
-				j++)
-		{
-			mappedTensor(j) = *mappedMemory;
-			mappedMemory++;
-		}
-	}
-
-	return tensorflow::Status::OK();
 }
 
 // Reads a model graph definition from disk, and creates a session object you

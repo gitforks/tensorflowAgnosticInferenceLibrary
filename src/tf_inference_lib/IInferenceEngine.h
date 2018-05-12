@@ -40,15 +40,16 @@ public:
 
 	virtual void shutdown() = 0;
 
-	virtual void addInput(const std::string blobName,
+	virtual void* getOutputData(unsigned int index) = 0;
+	virtual void* getInputData(unsigned int index) = 0;
+
+	virtual void* addInput(const std::string blobName,
 			const std::vector<int64_t>& dims,
-			const eExchangeDataType dtype,
-			tensor_exchange_t& o_exchangeStruct) = 0;
+			const eExchangeDataType dtype) = 0;
 
 	virtual void addOutput(const std::string blobName,
 			const std::vector<int64_t>& dims,
-			const eExchangeDataType dtype,
-			tensor_exchange_t& o_exchangeStruct) = 0;
+			const eExchangeDataType dtype) = 0;
 };
 
 class cInferenceEngineFactory {
