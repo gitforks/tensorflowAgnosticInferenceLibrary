@@ -24,17 +24,23 @@ cTfInference::~cTfInference()
 }
 
 
-tensorflow::int8 cTfInference::init(std::string pathToModel)
+tensorflow::int8 cTfInference::init(std::string pathToModel, float memory_fraction)
 {
 	LOG(INFO) << "Loading Modell from: " << pathToModel;
 	// We need to call this to set up global state for TensorFlow.
 	// create pseudo call
 
 	tensorflow::port::InitMain("tfInferenceLib", nullptr, nullptr);
-
+        
+	//sanitize memory_fraction
+	if (memory_fraction < 0.0 || memory_fraction > 1.0)
+	{
+		LOG(ERROR) << "Memory fraction has to be between 0.0 and 1.0! Inference engine will not be initialized." << std::endl;
+		return -1;
+	}
 	// First we load and initialize the model.
 	string graph_path = tensorflow::io::JoinPath(pathToModel);
-	Status load_graph_status = LoadGraph(graph_path, &m_pSession);
+	Status load_graph_status = LoadGraph(graph_path, &m_pSession, memory_fraction);
 	if (!load_graph_status.ok()) {
 		LOG(ERROR) << load_graph_status;
 		return -1;
@@ -129,7 +135,8 @@ tensorflow::int8 cTfInference::infer()
 // Reads a model graph definition from disk, and creates a session object you
 // can use to run it.
 Status cTfInference::LoadGraph(string graph_file_name,
-                 std::unique_ptr<tensorflow::Session>* session) {
+                 std::unique_ptr<tensorflow::Session>* session,
+		 float per_process_gpu_memory_fraction = 1.0) {
   tensorflow::GraphDef graph_def;
   Status load_graph_status =
       ReadBinaryProto(tensorflow::Env::Default(), graph_file_name, &graph_def);
@@ -137,7 +144,10 @@ Status cTfInference::LoadGraph(string graph_file_name,
     return tensorflow::errors::NotFound("Failed to load compute graph at '",
                                         graph_file_name, "'");
   }
-  session->reset(tensorflow::NewSession(tensorflow::SessionOptions()));
+  tensorflow::SessionOptions sessionOptions;
+  //sessionOptions.config.mutable_gpu_options()->set_allow_growth(allow_growth);
+  sessionOptions.config.mutable_gpu_options()->set_per_process_gpu_memory_fraction(per_process_gpu_memory_fraction);
+  session->reset(tensorflow::NewSession(sessionOptions));
   Status session_create_status = (*session)->Create(graph_def);
 
   if (!session_create_status.ok()) {

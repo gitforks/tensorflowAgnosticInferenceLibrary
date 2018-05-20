@@ -40,7 +40,7 @@ public:
 	cTfInference();
 	~cTfInference();
 
-	int8_t init(std::string pathToModel);
+	int8_t init(std::string pathToModel, float memory_fraction);
 
 	int8_t infer();
 
