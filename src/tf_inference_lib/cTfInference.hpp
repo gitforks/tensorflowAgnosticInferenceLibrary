@@ -40,7 +40,7 @@ public:
 	cTfInference();
 	~cTfInference();
 
-	int8_t init(std::string pathToModel, float memory_fraction);
+	int8_t init(std::string pathToModel, float memory_fraction, bool allow_memory_growth);
 
 	int8_t infer();
 
@@ -59,7 +59,9 @@ public:
 
 protected: /* helper functions */
 	tensorflow::Status LoadGraph(std::string graph_file_name,
-	                 std::unique_ptr<tensorflow::Session>* session);
+	                 std::unique_ptr<tensorflow::Session>* session, 
+			 float per_process_gpu_memory_fraction,
+			 bool allow_memory_growth);
 
   	tensorflow::DataType convertDataType(eExchangeDataType exchangeType);
 	void*  getDataPointer(tensorflow::Tensor& tensor);

@@ -24,7 +24,7 @@ cTfInference::~cTfInference()
 }
 
 
-tensorflow::int8 cTfInference::init(std::string pathToModel, float memory_fraction)
+tensorflow::int8 cTfInference::init(std::string pathToModel, float memory_fraction, bool allow_memory_growth)
 {
 	LOG(INFO) << "Loading Modell from: " << pathToModel;
 	// We need to call this to set up global state for TensorFlow.
@@ -40,7 +40,7 @@ tensorflow::int8 cTfInference::init(std::string pathToModel, float memory_fracti
 	}
 	// First we load and initialize the model.
 	string graph_path = tensorflow::io::JoinPath(pathToModel);
-	Status load_graph_status = LoadGraph(graph_path, &m_pSession, memory_fraction);
+	Status load_graph_status = LoadGraph(graph_path, &m_pSession, memory_fraction, allow_memory_growth);
 	if (!load_graph_status.ok()) {
 		LOG(ERROR) << load_graph_status;
 		return -1;
@@ -136,7 +136,8 @@ tensorflow::int8 cTfInference::infer()
 // can use to run it.
 Status cTfInference::LoadGraph(string graph_file_name,
                  std::unique_ptr<tensorflow::Session>* session,
-		 float per_process_gpu_memory_fraction = 1.0) {
+		 float per_process_gpu_memory_fraction = 1.0,
+                 bool allow_memory_growth = false) {
   tensorflow::GraphDef graph_def;
   Status load_graph_status =
       ReadBinaryProto(tensorflow::Env::Default(), graph_file_name, &graph_def);
@@ -145,7 +146,8 @@ Status cTfInference::LoadGraph(string graph_file_name,
                                         graph_file_name, "'");
   }
   tensorflow::SessionOptions sessionOptions;
-  //sessionOptions.config.mutable_gpu_options()->set_allow_growth(allow_growth);
+
+  sessionOptions.config.mutable_gpu_options()->set_allow_growth(allow_memory_growth);
   sessionOptions.config.mutable_gpu_options()->set_per_process_gpu_memory_fraction(per_process_gpu_memory_fraction);
   session->reset(tensorflow::NewSession(sessionOptions));
   Status session_create_status = (*session)->Create(graph_def);

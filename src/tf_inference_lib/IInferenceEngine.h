@@ -34,7 +34,7 @@ public:
 	IInferenceEngine(){};
 	virtual ~IInferenceEngine(){};
 
-	virtual int8_t init(std::string pathToModel, float memory_fraction) = 0;
+	virtual int8_t init(std::string pathToModel, float memory_fraction, bool allow_memory_growth) = 0;
 
 	virtual int8_t infer() = 0;
 
