@@ -7,6 +7,10 @@ licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
 
+load("@local_config_tensorrt//:build_defs.bzl",
+     "if_tensorrt",
+)
+
 cc_library(
 	name = "tf_inference_lib",
 	srcs = [
@@ -34,7 +38,14 @@ cc_binary(
         "//tensorflow/cc:cc_ops",
         "//tensorflow/core:framework_internal",
         "//tensorflow/core:tensorflow",
-        ],
+        "//tensorflow/c:c_api",
+        "//tensorflow/c/eager:c_api",
+        "//tensorflow/cc:client_session",
+        "//tensorflow/cc:scope",
+        "//tensorflow/cc/profiler"
+        ] + if_tensorrt([
+        "//tensorflow/contrib/tensorrt:trt_engine_op_kernel",
+        ]),
 	linkopts=["-shared"],
 	linkshared=1,
 	visibility=["//visibility:public"]
@@ -60,9 +71,10 @@ cc_binary(
     visibility=["//visibility:public"],
     deps = [
     	":tf_inference_lib",
+        "//tensorflow/contrib/tensorrt:trt_engine_op_kernel",
         "//tensorflow/cc:cc_ops",
         "//tensorflow/core:framework_internal",
-        "//tensorflow/core:tensorflow",
+        "//tensorflow/core:tensorflow"
     ],
 )
 
