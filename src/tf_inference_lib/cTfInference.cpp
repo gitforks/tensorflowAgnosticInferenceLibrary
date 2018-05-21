@@ -6,6 +6,7 @@
  */
 
 #include "cTfInference.hpp"
+#include "tensorflow/c/c_api.h"
 
 using namespace tf_interface_lib;
 using tensorflow::string;
@@ -16,6 +17,16 @@ using tensorflow::int32;
 
 cTfInference::cTfInference()
 {
+        TF_Status* statusLibraryLoader = TF_NewStatus();
+	TF_LoadLibrary("_trt_engine_op.so", statusLibraryLoader);
+        if(TF_GetCode(statusLibraryLoader) != TF_OK)
+        {
+            std::cout << "TensorRT: " << TF_Message(statusLibraryLoader) << std::endl;
+        }
+        else
+        {
+            std::cout << "TensorRT successfully loaded!" << std::endl;
+        }
 	m_bInitialized = false;
 }
 
